@@ -132,7 +132,8 @@ def main():
                     save_image(resultsample.view(-1, 3, im_size, im_size),
                                'results_gen/sample_' + str(epoch) + "_" + str(i) + '.png')
 
-        torch.save(vae.state_dict(), f"VAEmodel_{epoch}.pkl")
+        if (epoch + 1) % 5 == 0:
+            torch.save(vae.state_dict(), f"VAEmodel_{epoch}.pkl")
 
         del batches
         del data_train
