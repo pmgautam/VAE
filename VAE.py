@@ -14,18 +14,21 @@
 # ==============================================================================
 
 from __future__ import print_function
+
+import os
+import pickle
+import random
+import time
+
+import numpy as np
 import torch.utils.data
+from dlutils import batch_provider
+from dlutils.pytorch.cuda_helper import *
 from scipy import misc
 from torch import optim
 from torchvision.utils import save_image
+
 from net import *
-import numpy as np
-import pickle
-import time
-import random
-import os
-from dlutils import batch_provider
-from dlutils.pytorch.cuda_helper import *
 
 im_size = 128
 
@@ -129,10 +132,11 @@ def main():
                     save_image(resultsample.view(-1, 3, im_size, im_size),
                                'results_gen/sample_' + str(epoch) + "_" + str(i) + '.png')
 
+        torch.save(vae.state_dict(), f"VAEmodel_{epoch}.pkl")
+
         del batches
         del data_train
     print("Training finish!... save training results")
-    torch.save(vae.state_dict(), "VAEmodel.pkl")
 
 if __name__ == '__main__':
     main()
