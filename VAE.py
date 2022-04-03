@@ -1,11 +1,11 @@
 # Copyright 2019 Stanislav Pidhorskyi
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #  http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,14 +40,17 @@ def loss_function(recon_x, x, mu, logvar):
     # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
     # https://arxiv.org/abs/1312.6114
     # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
-    KLD = -0.5 * torch.mean(torch.mean(1 + logvar - mu.pow(2) - logvar.exp(), 1))
+    KLD = -0.5 * torch.mean(torch.mean(1 + logvar -
+                            mu.pow(2) - logvar.exp(), 1))
     return BCE, KLD * 0.1
 
 
 def process_batch(batch):
-    data = [misc.imresize(x, [im_size, im_size]).transpose((2, 0, 1)) for x in batch]
+    data = [misc.imresize(x, [im_size, im_size]).transpose(
+        (2, 0, 1)) for x in batch]
 
-    x = torch.from_numpy(np.asarray(data, dtype=np.float32)).cuda() / 127.5 - 1.
+    x = torch.from_numpy(np.asarray(
+        data, dtype=np.float32)).cuda() / 127.5 - 1.
     x = x.view(-1, 3, im_size, im_size)
     return x
 
@@ -62,8 +65,9 @@ def main():
 
     lr = 0.0005
 
-    vae_optimizer = optim.Adam(vae.parameters(), lr=lr, betas=(0.5, 0.999), weight_decay=1e-5)
- 
+    vae_optimizer = optim.Adam(
+        vae.parameters(), lr=lr, betas=(0.5, 0.999), weight_decay=1e-5)
+
     train_epoch = 40
 
     sample1 = torch.randn(128, z_size).view(-1, z_size, 1, 1)
@@ -78,7 +82,8 @@ def main():
 
         random.shuffle(data_train)
 
-        batches = batch_provider(data_train, batch_size, process_batch, report_progress=True)
+        batches = batch_provider(
+            data_train, batch_size, process_batch, report_progress=True)
 
         rec_loss = 0
         kl_loss = 0
@@ -132,12 +137,14 @@ def main():
                     save_image(resultsample.view(-1, 3, im_size, im_size),
                                'results_gen/sample_' + str(epoch) + "_" + str(i) + '.png')
 
-        if (epoch + 1) % 5 == 0:
+        if (epoch + 1) % 1 == 0:
+            print(f"saving model")
             torch.save(vae.state_dict(), f"VAEmodel_{epoch}.pkl")
 
         del batches
         del data_train
     print("Training finish!... save training results")
+
 
 if __name__ == '__main__':
     main()
