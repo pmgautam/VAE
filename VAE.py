@@ -139,7 +139,8 @@ def main():
 
         if (epoch + 1) % 1 == 0:
             print(f"saving model")
-            torch.save(vae.state_dict(), f"VAEmodel_{epoch}.pkl")
+            torch.save(vae.state_dict(
+            ), f"/content/drive/MyDrive/vae_celeba_models/VAEmodel_{epoch}.pkl")
 
         del batches
         del data_train
