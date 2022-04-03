@@ -1,14 +1,11 @@
-import random
 import pickle
+import random
 import zipfile
 
 import numpy as np
-
-from scipy import misc
 import tqdm
-
 from dlutils import download
-
+from scipy import misc
 
 corrupted = [
     '195995.jpg',
@@ -29,7 +26,7 @@ corrupted = [
     '016530.jpg',
 ]
 
-download.from_google_drive("0B7EVK8r0v71pZjFTYXZWM3FlRnM")
+# download.from_google_drive("0B7EVK8r0v71pZjFTYXZWM3FlRnM")
 
 
 def center_crop(x, crop_h=128, crop_w=None, resize_w=128):
@@ -42,7 +39,7 @@ def center_crop(x, crop_h=128, crop_w=None, resize_w=128):
     return misc.imresize(x[j:j+crop_h, i:i+crop_w], [resize_w, resize_w]) 
 
 
-archive = zipfile.ZipFile('img_align_celeba.zip', 'r')
+archive = zipfile.ZipFile('/content/drive/MyDrive/dataset/img_align_celeba.zip', 'r')
 
 names = archive.namelist()
 
