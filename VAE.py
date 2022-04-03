@@ -137,7 +137,7 @@ def main():
                     save_image(resultsample.view(-1, 3, im_size, im_size),
                                'results_gen/sample_' + str(epoch) + "_" + str(i) + '.png')
 
-        if (epoch + 1) % 1 == 0:
+        if (epoch + 1) % 5 == 0:
             print(f"saving model")
             torch.save(vae.state_dict(
             ), f"/content/drive/MyDrive/vae_celeba_models/VAEmodel_{epoch}.pkl")
