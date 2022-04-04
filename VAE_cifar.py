@@ -16,23 +16,19 @@
 from __future__ import print_function
 
 import os
-import pickle
-import random
 import time
 
-import numpy as np
 import torch.utils.data
 import torchvision
 import torchvision.transforms as transforms
-from dlutils import batch_provider
-from dlutils.pytorch.cuda_helper import *
-from scipy import misc
 from torch import optim
 from torchvision.utils import save_image
 
 from net import *
 
-im_size = 128
+torch.manual_seed(42)
+
+im_size = 32
 
 transform = transforms.Compose(
     [transforms.ToTensor(),
@@ -63,20 +59,9 @@ def loss_function(recon_x, x, mu, logvar):
     return BCE, KLD * 0.1
 
 
-def process_batch(batch):
-    data = [misc.imresize(x, [im_size, im_size]).transpose(
-        (2, 0, 1)) for x in batch]
-
-    x = torch.from_numpy(np.asarray(
-        data, dtype=np.float32)).cuda() / 127.5 - 1.
-    x = x.view(-1, 3, im_size, im_size)
-    return x
-
-
 def main():
-    batch_size = 128
     z_size = 512
-    vae = VAE(zsize=z_size, layer_count=5)
+    vae = VAE(zsize=z_size, layer_count=4)
     vae.cuda()
     vae.train()
     vae.weight_init(mean=0, std=0.02)
@@ -88,7 +73,10 @@ def main():
 
     train_epoch = 40
 
-    sample1 = torch.randn(128, z_size).view(-1, z_size, 1, 1)
+    sample1 = torch.randn(128, z_size).view(-1, z_size, 1, 1).cuda()
+
+    os.makedirs('results_rec', exist_ok=True)
+    os.makedirs('results_gen', exist_ok=True)
 
     for epoch in range(train_epoch):
         vae.train()
@@ -117,9 +105,6 @@ def main():
 
             #############################################
 
-            os.makedirs('results_rec', exist_ok=True)
-            os.makedirs('results_gen', exist_ok=True)
-
             epoch_end_time = time.time()
             per_epoch_ptime = epoch_end_time - epoch_start_time
 
@@ -137,12 +122,12 @@ def main():
                     vae.eval()
                     x_rec, _, _ = vae(x)
                     resultsample = torch.cat([x, x_rec]) * 0.5 + 0.5
-                    resultsample = resultsample.cpu()
+                    resultsample = resultsample  # .cpu()
                     save_image(resultsample.view(-1, 3, im_size, im_size),
                                'results_rec/sample_' + str(epoch) + "_" + str(i) + '.png')
                     x_rec = vae.decode(sample1)
                     resultsample = x_rec * 0.5 + 0.5
-                    resultsample = resultsample.cpu()
+                    resultsample = resultsample  # .cpu()
                     save_image(resultsample.view(-1, 3, im_size, im_size),
                                'results_gen/sample_' + str(epoch) + "_" + str(i) + '.png')
 
