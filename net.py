@@ -22,7 +22,7 @@ class VAE(nn.Module):
     def __init__(self, zsize, layer_count=3, channels=3):
         super(VAE, self).__init__()
 
-        d = 64
+        d = 128
         self.d = d
         self.zsize = zsize
 
