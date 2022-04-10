@@ -71,7 +71,7 @@ def main():
     vae_optimizer = optim.Adam(
         vae.parameters(), lr=lr, betas=(0.5, 0.999), weight_decay=1e-5)
 
-    train_epoch = 40
+    train_epoch = 200
 
     sample1 = torch.randn(128, z_size).view(-1, z_size, 1, 1).cuda()
 
