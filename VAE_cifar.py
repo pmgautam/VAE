@@ -34,7 +34,7 @@ transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-batch_size = 32
+batch_size = 128
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                         download=True, transform=transform)
@@ -71,7 +71,7 @@ def main():
     vae_optimizer = optim.Adam(
         vae.parameters(), lr=lr, betas=(0.5, 0.999), weight_decay=1e-5)
 
-    train_epoch = 200
+    train_epoch = 100
 
     sample1 = torch.randn(128, z_size).view(-1, z_size, 1, 1).cuda()
 
