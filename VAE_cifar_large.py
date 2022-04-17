@@ -139,10 +139,8 @@ def main():
             print(f"saving model")
             torch.save(vae.state_dict(
             ), f"/content/drive/MyDrive/vae_celeba_models/VAEmodel_cifar_{epoch}.pkl")
-            shutil.copytree("/content/VAE/results_gen",
-                            "/content/drive/MyDrive/vae_cifar10/results_large/")
-            shutil.copytree("/content/VAE/results_rec",
-                            "/content/drive/MyDrive/vae_cifar10/results_large/")
+            os.system("cp -r /content/VAE/results_gen /content/drive/MyDrive/vae_cifar10/results_large/")
+            os.system("cp -r /content/VAE/results_rec /content/drive/MyDrive/vae_cifar10/results_large/")
 
     print("Training finish!... save training results")
 
