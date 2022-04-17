@@ -16,6 +16,7 @@
 from __future__ import print_function
 
 import os
+import shutil
 import time
 
 import torch.utils.data
@@ -78,6 +79,8 @@ def main():
 
     os.makedirs('results_rec', exist_ok=True)
     os.makedirs('results_gen', exist_ok=True)
+    os.makedirs('/content/drive/MyDrive/vae_cifar10/results_large',
+                exist_ok=True)
 
     for epoch in range(train_epoch):
         vae.train()
@@ -136,6 +139,10 @@ def main():
             print(f"saving model")
             torch.save(vae.state_dict(
             ), f"/content/drive/MyDrive/vae_celeba_models/VAEmodel_cifar_{epoch}.pkl")
+            shutil.copytree("/content/VAE/results_gen",
+                            "/content/drive/MyDrive/vae_cifar10/results_large/")
+            shutil.copytree("/content/VAE/results_rec",
+                            "/content/drive/MyDrive/vae_cifar10/results_large/")
 
     print("Training finish!... save training results")
 
