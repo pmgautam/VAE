@@ -62,7 +62,7 @@ def loss_function(recon_x, x, mu, logvar):
 
 def main():
     z_size = 512
-    vae = VAE(zsize=z_size, layer_count=4)
+    vae = VAE(zsize=z_size, layer_count=5)
     vae.cuda()
     vae.train()
     vae.weight_init(mean=0, std=0.02)
