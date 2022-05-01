@@ -59,6 +59,15 @@ def loss_function(recon_x, x, mu, logvar):
     return BCE, KLD * 0.1
 
 
+rec_dir = "content/drive/MyDrive/vae_vertical_attention/results_rec"
+gen_dir = "content/drive/MyDrive/vae_vertical_attention/results_gen"
+models_dir = "content/drive/MyDrive/vae_vertical_attention/models"
+
+os.makedirs(rec_dir, exist_ok=True)
+os.makedirs(gen_dir, exist_ok=True)
+os.makedirs(models_dir, exist_ok=True)
+
+
 def main():
     z_size = 512
     vae = VAE(zsize=z_size, layer_count=4)
@@ -73,10 +82,7 @@ def main():
 
     train_epoch = 100
 
-    sample1 = torch.randn(128, z_size).view(-1, z_size, 1, 1).cuda()
-
-    os.makedirs('results_rec', exist_ok=True)
-    os.makedirs('results_gen', exist_ok=True)
+    sample1 = torch.randn(batch_size, z_size).view(-1, z_size, 1, 1).cuda()
 
     for epoch in range(train_epoch):
         vae.train()
@@ -124,17 +130,17 @@ def main():
                     resultsample = torch.cat([x, x_rec]) * 0.5 + 0.5
                     resultsample = resultsample  # .cpu()
                     save_image(resultsample.view(-1, 3, im_size, im_size),
-                               'results_rec/sample_' + str(epoch) + "_" + str(i) + '.png')
+                               f'{rec_dir}/sample_' + str(epoch) + "_" + str(i) + '.png')
                     x_rec = vae.decode(sample1)
                     resultsample = x_rec * 0.5 + 0.5
                     resultsample = resultsample  # .cpu()
                     save_image(resultsample.view(-1, 3, im_size, im_size),
-                               'results_gen/sample_' + str(epoch) + "_" + str(i) + '.png')
+                               f'{gen_dir}/sample_' + str(epoch) + "_" + str(i) + '.png')
 
         if (epoch + 1) % 5 == 0:
             print(f"saving model")
             torch.save(vae.state_dict(
-            ), f"/content/drive/MyDrive/vae_celeba_models/VAEmodel_cifar_{epoch}.pkl")
+            ), f"{models_dir}/VAEmodel_cifar_{epoch}.pkl")
 
     print("Training finish!... save training results")
 
