@@ -22,6 +22,24 @@ from feature_extraction_vat_cnn import FCN_Encoder
 params = {"dropout": 0.1, "input_channels": 3}
 
 
+class Reshape(nn.Module):
+    def __init__(self, shape):
+        super(Reshape, self).__init__()
+        self.shape = shape
+
+    def forward(self, x):
+        return x.view(x.shape[0], *self.shape)
+
+
+class PrintShape(nn.Module):
+    def __init__(self, layer_name=""):
+        super(PrintShape, self).__init__()
+        self.layer_name = layer_name
+
+    def forward(self, x):
+        return x
+
+
 class VAE(nn.Module):
     def __init__(self, zsize, layer_count=3, channels=3):
         super(VAE, self).__init__()
@@ -61,6 +79,24 @@ class VAE(nn.Module):
         setattr(self, "deconv%d" % (self.layer_count + 1),
                 nn.ConvTranspose2d(inputs, channels, 4, 2, 1))
 
+        dec_modules = [PrintShape("decode 1"),
+                       Reshape((self.zsize,)),
+                       PrintShape("decode 2"),
+                       nn.Linear(zsize, self.d_max * 2 * 2),
+                       PrintShape("decode 3"),
+                       Reshape((self.d_max, 2, 2)),
+                       nn.LeakyReLU(0.2)]
+
+        for i in range(1, self.layer_count):
+            dec_modules.append(getattr(self, "deconv%d" % (i + 1)))
+            dec_modules.append(getattr(self, "deconv%d_bn" % (i + 1)))
+            dec_modules.append(nn.LeakyReLU(0.2))
+
+        dec_modules.append(getattr(self, "deconv%d" % (self.layer_count + 1)))
+        dec_modules.append(nn.Tanh())
+
+        self.decoder = nn.Sequential(*dec_modules)
+
     def encode(self, x):
         # for i in range(self.layer_count):
         #     x = F.relu(getattr(self, "conv%d_bn" % (i + 1))
@@ -84,7 +120,7 @@ class VAE(nn.Module):
         x = x.view(x.shape[0], self.zsize)
         x = self.d1(x)
         x = x.view(x.shape[0], self.d_max, 2, 2)
-        #x = self.deconv1_bn(x)
+        # x = self.deconv1_bn(x)
         x = F.leaky_relu(x, 0.2)
 
         for i in range(1, self.layer_count):
@@ -99,7 +135,8 @@ class VAE(nn.Module):
         mu = mu.squeeze()
         logvar = logvar.squeeze()
         z = self.reparameterize(mu, logvar)
-        return self.decode(z.view(-1, self.zsize, 1, 1)), mu, logvar
+        z = z.view(-1, self.zsize, 1, 1)
+        return self.decoder(z), mu, logvar
 
     def weight_init(self, mean, std):
         for m in self._modules:
