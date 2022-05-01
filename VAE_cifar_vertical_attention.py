@@ -39,9 +39,6 @@ transform = transforms.Compose(
 batch_size = 128
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-real_label = torch.ones(batch_size, 1).to(device)
-fake_label = torch.zeros(batch_size, 1).to(device)
-
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                         download=True, transform=transform)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
@@ -114,6 +111,8 @@ def main():
         i = 0
         for i, data in enumerate(trainloader):
             x = data[0].cuda()
+            real_label = torch.ones(x.shape[0], 1).to(device)
+            fake_label = torch.zeros(x.shape[0], 1).to(device)
 
             vae.train()
             discrim.train()
