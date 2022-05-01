@@ -24,7 +24,7 @@ import torchvision.transforms as transforms
 from torch import optim
 from torchvision.utils import save_image
 
-from net import *
+from net_vertical_attention import *
 
 torch.manual_seed(42)
 
@@ -82,7 +82,7 @@ def main():
 
     train_epoch = 100
 
-    sample1 = torch.randn(128, z_size).view(-1, z_size, 1, 1).cuda()
+    sample1 = torch.randn(batch_size, z_size).view(-1, z_size, 1, 1).cuda()
 
     for epoch in range(train_epoch):
         vae.train()
