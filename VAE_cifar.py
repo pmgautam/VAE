@@ -24,17 +24,23 @@ import torchvision.transforms as transforms
 from torch import optim
 from torchvision.utils import save_image
 
+from discriminator import Discriminator
 from net import *
 
 torch.manual_seed(42)
 
 im_size = 32
+gamma = 15
 
 transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 batch_size = 128
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+real_label = torch.ones(batch_size, 1).to(device)
+fake_label = torch.zeros(batch_size, 1).to(device)
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                         download=True, transform=transform)
@@ -45,6 +51,9 @@ testset = torchvision.datasets.CIFAR10(root='./data', train=False,
                                        download=True, transform=transform)
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                          shuffle=False, num_workers=2)
+discrim = Discriminator().to(device)
+
+criterion = torch.nn.BCELoss()
 
 
 def loss_function(recon_x, x, mu, logvar):
@@ -77,8 +86,12 @@ def main():
 
     lr = 0.0005
 
-    vae_optimizer = optim.Adam(
-        vae.parameters(), lr=lr, betas=(0.5, 0.999), weight_decay=1e-5)
+    enc_optimizer = optim.Adam(
+        vae.encoder.parameters(), lr=lr, betas=(0.5, 0.999), weight_decay=1e-5)
+    discrim_optimizer = optim.Adam(
+        discrim.parameters(), lr=lr)
+    dec_optimizer = optim.Adam(
+        vae.decoder.parameters(), lr=lr)
 
     train_epoch = 100
 
@@ -93,22 +106,76 @@ def main():
         epoch_start_time = time.time()
 
         if (epoch + 1) % 8 == 0:
-            vae_optimizer.param_groups[0]['lr'] /= 4
+            enc_optimizer.param_groups[0]['lr'] /= 4
             print("learning rate change!")
 
         i = 0
         for i, data in enumerate(trainloader):
             x = data[0].cuda()
+
             vae.train()
-            vae.zero_grad()
+            discrim.train()
+
+            # vae loss
             rec, mu, logvar = vae(x)
 
             loss_re, loss_kl = loss_function(rec, x, mu, logvar)
-            (loss_re + loss_kl).backward()
-            vae_optimizer.step()
+            vae_loss = loss_re + loss_kl
+
+            enc_optimizer.zero_grad()
+            vae_loss.backward(retain_graph=True)
+            enc_optimizer.step()
+
+            z_p = torch.randn(batch_size, z_size).to(device)
+
+            # decoder loss
+            # classify all real batch
+            rec1, mu1, logvar1 = vae(x)
+
+            output_real = discrim(x)[0]
+            loss_gan_real_dec = criterion(output_real, real_label)
+
+            # classify all fake batch
+            output_fake = discrim(rec1)[0]
+            loss_gan_fake_dec = criterion(output_fake, fake_label)
+
+            gen = vae.decoder(z_p)
+            gen = gen * 0.5 + 0.5
+            output_gen = discrim(gen)[0]
+            loss_x_p = criterion(output_gen, fake_label)
+            gan_loss_dec = loss_gan_real_dec + loss_gan_fake_dec + loss_x_p
+
+            rec1, mu1, logvar1 = vae(x)
+            rec_loss_dec = torch.mean((rec1 - x)**2)
+            dec_loss = gamma * rec_loss_dec - gan_loss_dec
+
+            dec_optimizer.zero_grad()
+            dec_loss.backward(retain_graph=True)
+            dec_optimizer.step()
+
+            # GAN loss
+            # classify all real batch
+            rec2, mu2, logvar2 = vae(x)
+
+            output_real = discrim(x)[0]
+            loss_gan_real = criterion(output_real, real_label)
+
+            # classify all fake batch
+            output_fake = discrim(rec2)[0]
+            loss_gan_fake = criterion(output_fake, fake_label)
+
+            gen = vae.decoder(z_p)
+            gen = gen * 0.5 + 0.5
+            output_gen = discrim(gen)[0]
+            loss_x_p = criterion(output_gen, fake_label)
+            gan_loss = loss_gan_real + loss_gan_fake + loss_x_p
+
+            discrim_optimizer.zero_grad()
+            gan_loss.backward(retain_graph=True)
+            discrim_optimizer.step()
+
             rec_loss += loss_re.item()
             kl_loss += loss_kl.item()
-
             #############################################
 
             epoch_end_time = time.time()
