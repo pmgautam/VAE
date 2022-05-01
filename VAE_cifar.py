@@ -59,9 +59,9 @@ def loss_function(recon_x, x, mu, logvar):
     return BCE, KLD * 0.1
 
 
-rec_dir = "content/drive/MyDrive/vae_vertical_attention/results_rec"
-gen_dir = "content/drive/MyDrive/vae_vertical_attention/results_gen"
-models_dir = "content/drive/MyDrive/vae_vertical_attention/models"
+rec_dir = "/content/drive/MyDrive/vae_vertical_attention/results_rec"
+gen_dir = "/content/drive/MyDrive/vae_vertical_attention/results_gen"
+models_dir = "/content/drive/MyDrive/vae_vertical_attention/models"
 
 os.makedirs(rec_dir, exist_ok=True)
 os.makedirs(gen_dir, exist_ok=True)
