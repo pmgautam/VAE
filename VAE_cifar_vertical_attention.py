@@ -113,6 +113,7 @@ def main():
             x = data[0].cuda()
             real_label = torch.ones(x.shape[0], 1).to(device)
             fake_label = torch.zeros(x.shape[0], 1).to(device)
+            z_p = torch.randn(x.shape[0], z_size).to(device)
 
             vae.train()
             discrim.train()
@@ -126,8 +127,6 @@ def main():
             enc_optimizer.zero_grad()
             vae_loss.backward(retain_graph=True)
             enc_optimizer.step()
-
-            z_p = torch.randn(batch_size, z_size).to(device)
 
             # decoder loss
             # classify all real batch
